@@ -30,7 +30,7 @@ exports.registerUser = async (req, res) => {
             token: generateToken(newUser[0].id)
         });
     } catch (error) {
-        res.status(500).json({ message: 'Sunucu hatası.' });
+        res.status(500).json({ message: 'Sunucu hatası: ' + error });
     }
 };
 

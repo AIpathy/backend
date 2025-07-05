@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "start:prod": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,9 +16,7 @@
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.14.1"
-  },
-  "devDependencies": {
+    "mysql2": "^3.14.1",
     "nodemon": "^3.1.10"
   }
 }
