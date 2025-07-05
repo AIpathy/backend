@@ -6,11 +6,6 @@ Bu proje, Aipathy uygulamasının backend API yapısını içerir.
 - [x] Kullanıcı Kayıt (Sign Up)
 - [x] Kullanıcı Giriş (Login)
 
-## 🔨 Geliştirme Aşamasında
-- [ ] Token kontrolü (korumalı sayfa)
-- [ ] Profil çekme
-- [ ] Diğer API geliştirmeleri
-
 ## 🛠️ Kullanılan Teknolojiler
 - Node.js
 - Express.js
