@@ -11,10 +11,10 @@ app.use(express.json());
 
 // Basit test için anasayfa
 app.get('/', (req, res) => {
-    res.send('API Çalışıyor Lordum!');
+    res.send('API Çalışıyor');
 });
 
-// Auth routes (birazdan ekleyeceğiz)
+// Auth routes 
 app.use('/api/auth', require('./routes/authRoutes'));
 
 const PORT = process.env.PORT || 5000;
