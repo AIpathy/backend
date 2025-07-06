@@ -17,5 +17,5 @@ USER nodejs
 
 EXPOSE 8080
 
-# Use nodemon for development, node for production
-CMD ["npm", "start"]
+# Use nodemon for development
+CMD ["npm", "run", "dev"]
