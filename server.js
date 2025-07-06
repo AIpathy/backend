@@ -27,6 +27,6 @@ app.use('/api', require('./routes/userRoutes'));
 // Swagger route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => console.log(`Sunucu ${PORT} portunda çalışıyor...`));

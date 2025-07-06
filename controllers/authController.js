@@ -11,6 +11,14 @@ exports.registerUser = async (req, res) => {
     const { name, email, password, role } = req.body;
 
     try {
+        // Gerekli alanları kontrol et
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Ad, e-posta ve şifre alanları zorunludur.' });
+        }
+
+        // Role değerini kontrol et ve varsayılan değer ata
+        const userRole = role || 1; // Varsayılan olarak user (1)
+
         // Kullanıcı var mı kontrol et
         const [user] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
         if (user.length > 0) return res.status(400).json({ message: 'Bu e-posta zaten kayıtlı.' });
@@ -19,7 +27,7 @@ exports.registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Yeni kullanıcı ekle
-        await db.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, role]);
+        await db.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, userRole]);
 
         // Eklenen kullanıcıyı çek
         const [newUser] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);

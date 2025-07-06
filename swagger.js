@@ -9,7 +9,7 @@ const options = {
             description: 'Aipathy projesinin backend API dökümantasyonu',
         },
         servers: [
-            { url: 'http://localhost:5000' },
+            { url: 'http://localhost:8080' },
         ],
         components: { 
             securitySchemes: {

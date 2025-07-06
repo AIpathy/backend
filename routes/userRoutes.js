@@ -23,7 +23,7 @@ router.get('/profile', verifyToken, async (req, res) => {
         if (user.length === 0) {
             return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
         }
-        res.json(user[0]);
+        res.json(user[0]); // role int olarak dön
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası.' });
     }
@@ -43,7 +43,7 @@ router.get('/profile', verifyToken, async (req, res) => {
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/doctor-panel', verifyToken, verifyRole(['doctor']), (req, res) => {
+router.get('/doctor-panel', verifyToken, verifyRole([2]), (req, res) => {
     res.json({ message: 'Doctor paneline hoş geldiniz.' });
 });
 
@@ -61,7 +61,7 @@ router.get('/doctor-panel', verifyToken, verifyRole(['doctor']), (req, res) => {
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/user-panel', verifyToken, verifyRole(['user']), (req, res) => {
+router.get('/user-panel', verifyToken, verifyRole([1]), (req, res) => {
     res.json({ message: 'User paneline hoş geldiniz.' });
 });
 

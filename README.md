@@ -63,7 +63,7 @@ npm install
 npm start
 
 📝 Ek Bilgiler
-Swagger Dokümantasyonu → http://localhost:5000/api-docs
+Swagger Dokümantasyonu → http://localhost:8080/api-docs
 
 .env ve node_modules dosyaları .gitignore tarafından zaten takip edilmiyor.
 

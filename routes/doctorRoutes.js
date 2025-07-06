@@ -18,7 +18,7 @@ const { verifyToken, verifyRole } = require('../middlewares/authMiddleware');
  *       403:
  *         description: Erişim reddedildi
  */
-router.get('/doctor-panel', verifyToken, verifyRole(['doctor']), (req, res) => {
+router.get('/doctor-panel', verifyToken, verifyRole([2]), (req, res) => {
     res.json({ message: 'Doktor paneline hoş geldiniz.' });
 });
 

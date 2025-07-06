@@ -16,6 +16,31 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `roles`
+--
+
+DROP TABLE IF EXISTS `roles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `roles`
+--
+
+LOCK TABLES `roles` WRITE;
+/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+INSERT INTO `roles` VALUES (1,'user'),(2,'doctor'),(3,'admin');
+/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -27,12 +52,15 @@ CREATE TABLE `users` (
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `role` int DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `reset_token` varchar(255) DEFAULT NULL,
   `reset_token_expire` datetime DEFAULT NULL,
-  `role` varchar(50) DEFAULT 'user',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
+  KEY `fk_role` (`role`),
+  CONSTRAINT `fk_role` FOREIGN KEY (`role`) REFERENCES `roles` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -42,7 +70,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Lordum','lordum@example.com','$2b$10$bc6C8Z5ZHRbjpspvrbavzua7Y59obF0pGf7dPBeWuzIOVON/HLe6S','2025-07-04 23:34:40',NULL,NULL,'user'),(2,'John Doe','test@example.com','$2b$10$FddhbpqSNgIvFrFApiLyXO6bHqDJ2LlnlFBiP2IzrmaNjrRVRfKyq','2025-07-04 23:53:56',NULL,NULL,'user'),(3,'John Doe','john@example.com','$2b$10$f0TYh1NegG8h4M2NK5dTQeGYZ//ww2ME504wIS8JJ9rvjEktjxTQm','2025-07-05 21:32:34',NULL,NULL,'user'),(4,'Dr. John','drjohn@example.com','$2b$10$J0YgV4xn/ZSjSqX4aItQCelND2/75EPweMUS07gR4rltw7irqsJ1y','2025-07-05 23:49:40',NULL,NULL,'doctor');
+INSERT INTO `users` VALUES (1,'Lordum','lordum@example.com','$2b$10$bc6C8Z5ZHRbjpspvrbavzua7Y59obF0pGf7dPBeWuzIOVON/HLe6S','2025-07-04 23:34:40',NULL,NULL,1),(2,'John Doe','test@example.com','$2b$10$FddhbpqSNgIvFrFApiLyXO6bHqDJ2LlnlFBiP2IzrmaNjrRVRfKyq','2025-07-04 23:53:56',NULL,NULL,1),(3,'John Doe','john@example.com','$2b$10$f0TYh1NegG8h4M2NK5dTQeGYZ//ww2ME504wIS8JJ9rvjEktjxTQm','2025-07-05 21:32:34',NULL,NULL,1),(4,'Dr. John','drjohn@example.com','$2b$10$J0YgV4xn/ZSjSqX4aItQCelND2/75EPweMUS07gR4rltw7irqsJ1y','2025-07-05 23:49:40',NULL,NULL,2);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

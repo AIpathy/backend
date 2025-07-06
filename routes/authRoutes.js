@@ -26,7 +26,6 @@ const router = express.Router();
  *               - name
  *               - email
  *               - password
- *               - role
  *             properties:
  *               name:
  *                 type: string
@@ -35,8 +34,9 @@ const router = express.Router();
  *               password:
  *                 type: string
  *               role:
- *                 type: string
- *                 enum: [user, doctor]
+ *                 type: integer
+ *                 enum: [1, 2, 3]
+ *                 description: "Role ID (1: user, 2: doctor, 3: admin) - Opsiyonel, varsayılan: 1 (user)"
  *     responses:
  *       201:
  *         description: Kayıt başarılı
