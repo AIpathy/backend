@@ -1,32 +1,39 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const swaggerUi = require('swagger-ui-express'); 
-const swaggerSpec = require('./swagger');        
-dotenv.config();
+const helmet = require('helmet');
+require('dotenv').config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Basit test için anasayfa
-app.get('/', (req, res) => {
-    res.send('API Çalışıyor Lordum!');
-});
-
-// Auth routes
-app.use('/api/auth', require('./routes/authRoutes'));
-
-// Doctor routes
-app.use('/api', require('./routes/doctorRoutes'));
-
-// User routes
-app.use('/api', require('./routes/userRoutes'));
-
-// Swagger route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => console.log(`Sunucu ${PORT} portunda çalışıyor...`));
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
+app.use('/uploads', express.static('uploads'));
+
+// Routes - Sadece auth route'u aktif
+app.use('/api/auth', require('./routes/auth'));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'AIpathy Backend is running' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
