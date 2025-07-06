@@ -9,9 +9,7 @@ const options = {
             description: 'Aipathy projesinin backend API dökümantasyonu',
         },
         servers: [
-            {
-                url: 'http://localhost:5000',
-            },
+            { url: 'http://localhost:5000' },
         ],
         components: { 
             securitySchemes: {
@@ -22,13 +20,9 @@ const options = {
                 },
             },
         },
-        security: [ 
-            {
-                bearerAuth: [],
-            },
-        ],
+        security: [{ bearerAuth: [] }],
     },
-    apis: ['./routes/*.js'], 
+    apis: ['./routes/*.js'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

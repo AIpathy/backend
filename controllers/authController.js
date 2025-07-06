@@ -1,11 +1,12 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-//Token üretme fonksiyonu
+// Token üretme fonksiyonu
 const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-//Kayıt fonksiyonu
+// Kayıt fonksiyonu
 exports.registerUser = async (req, res) => {
     const { name, email, password, role } = req.body;
 
@@ -27,7 +28,7 @@ exports.registerUser = async (req, res) => {
             id: newUser[0].id,
             name: newUser[0].name,
             email: newUser[0].email,
-            role: newUser[0].role, 
+            role: newUser[0].role,
             token: generateToken(newUser[0].id, newUser[0].role)
         });
     } catch (error) {
@@ -35,7 +36,7 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-//Giriş fonksiyonu
+// Giriş fonksiyonu
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -52,9 +53,52 @@ exports.loginUser = async (req, res) => {
             id: user[0].id,
             name: user[0].name,
             email: user[0].email,
-            role: user[0].role, 
+            role: user[0].role,
             token: generateToken(user[0].id, user[0].role)
         });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası.' });
+    }
+};
+
+// Şifremi Unuttum
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Kullanıcıyı bul
+        const [user] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+        if (user.length === 0) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+
+        // Token üret
+        const resetToken = crypto.randomBytes(20).toString('hex');
+
+        // Veritabanına yaz
+        await db.execute('UPDATE users SET resetToken = ? WHERE email = ?', [resetToken, email]);
+
+        // Normalde e-posta gönderilir, biz tokenı döneceğiz
+        res.status(200).json({ message: 'Şifre sıfırlama tokenı oluşturuldu.', resetToken });
+    } catch (error) {
+        res.status(500).json({ message: 'Sunucu hatası.' });
+    }
+};
+
+// Şifre Sıfırlama
+exports.resetPassword = async (req, res) => {
+    const { resetToken, newPassword } = req.body;
+
+    try {
+        // Token kontrol
+        const [user] = await db.execute('SELECT * FROM users WHERE resetToken = ?', [resetToken]);
+        if (user.length === 0) return res.status(400).json({ message: 'Geçersiz veya süresi dolmuş token.' });
+
+        // Şifreyi hashle
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Şifreyi güncelle ve tokenı temizle
+        await db.execute('UPDATE users SET password = ?, resetToken = NULL WHERE resetToken = ?', [hashedPassword, resetToken]);
+
+        res.status(200).json({ message: 'Şifre başarıyla sıfırlandı.' });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası.' });
     }
