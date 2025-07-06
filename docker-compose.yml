@@ -7,9 +7,12 @@ services:
       - NODE_ENV=development
       - PORT=8080
       - DB_HOST=mysql
+      - DB_PORT=3306
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=aipathy_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_EXPIRES_IN=24h
     depends_on:
       mysql:
         condition: service_healthy
@@ -32,7 +35,7 @@ services:
       - MYSQL_PASSWORD=aipathy_password
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
     healthcheck:
