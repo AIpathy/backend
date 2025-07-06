@@ -13,7 +13,7 @@ const options = {
                 url: 'http://localhost:5000',
             },
         ],
-        components: { // 🔥 Token desteği burada
+        components: { 
             securitySchemes: {
                 bearerAuth: {
                     type: 'http',
@@ -22,13 +22,13 @@ const options = {
                 },
             },
         },
-        security: [ // 🔥 Global token kontrolü burada
+        security: [ 
             {
                 bearerAuth: [],
             },
         ],
     },
-    apis: ['./routes/*.js'], // Route açıklamaları bu klasörde aranacak
+    apis: ['./routes/*.js'], 
 };
 
 const swaggerSpec = swaggerJSDoc(options);

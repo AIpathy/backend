@@ -17,6 +17,9 @@ app.get('/', (req, res) => {
 // Auth routes 
 app.use('/api/auth', require('./routes/authRoutes'));
 
+// Doctor routes
+app.use('/api', require('./routes/doctorRoutes'));
+
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => console.log(`Sunucu ${PORT} portunda çalışıyor...`));

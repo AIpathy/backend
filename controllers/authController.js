@@ -2,12 +2,12 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Token üretme fonksiyonu
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+//Token üretme fonksiyonu
+const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-// Kayıt fonksiyonu
+//Kayıt fonksiyonu
 exports.registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     try {
         // Kullanıcı var mı kontrol et
@@ -18,7 +18,7 @@ exports.registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Yeni kullanıcı ekle
-        await db.execute('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashedPassword]);
+        await db.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, role]);
 
         // Eklenen kullanıcıyı çek
         const [newUser] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
@@ -27,14 +27,15 @@ exports.registerUser = async (req, res) => {
             id: newUser[0].id,
             name: newUser[0].name,
             email: newUser[0].email,
-            token: generateToken(newUser[0].id)
+            role: newUser[0].role, 
+            token: generateToken(newUser[0].id, newUser[0].role)
         });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası: ' + error });
     }
 };
 
-// Giriş fonksiyonu
+//Giriş fonksiyonu
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -51,7 +52,8 @@ exports.loginUser = async (req, res) => {
             id: user[0].id,
             name: user[0].name,
             email: user[0].email,
-            token: generateToken(user[0].id)
+            role: user[0].role, 
+            token: generateToken(user[0].id, user[0].role)
         });
     } catch (error) {
         res.status(500).json({ message: 'Sunucu hatası.' });

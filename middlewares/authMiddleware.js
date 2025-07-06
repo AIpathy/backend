@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+//Token kontrolü
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -12,9 +13,19 @@ const verifyToken = (req, res, next) => {
         if (err) {
             return res.status(403).json({ message: 'Token geçersiz.' });
         }
-        req.user = user;
+        req.user = user; 
         next();
     });
 };
 
-module.exports = verifyToken;
+//Rol kontrolü
+const verifyRole = (allowedRoles) => {
+    return (req, res, next) => {
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({ message: 'Yetkisiz erişim.' });
+        }
+        next();
+    };
+};
+
+module.exports = { verifyToken, verifyRole };
