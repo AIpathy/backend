@@ -1,113 +1,180 @@
-const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { pool } = require('../config/database');
+const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-// Token üretme fonksiyonu
-const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+// Login
+const login = async (req, res) => {
+  try {
+    const { email, password, userType } = req.body;
 
-// Kayıt fonksiyonu
-exports.registerUser = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    // Get user from database
+    const [rows] = await pool.execute(
+      'SELECT * FROM users WHERE email = ? AND user_type = ?',
+      [email, userType]
+    );
 
-    try {
-        // Gerekli alanları kontrol et
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: 'Ad, e-posta ve şifre alanları zorunludur.' });
-        }
-
-        // Role değerini kontrol et ve varsayılan değer ata
-        const userRole = role || 1; // Varsayılan olarak user (1)
-
-        // Kullanıcı var mı kontrol et
-        const [user] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        if (user.length > 0) return res.status(400).json({ message: 'Bu e-posta zaten kayıtlı.' });
-
-        // Şifreyi şifrele
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Yeni kullanıcı ekle
-        await db.execute('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, userRole]);
-
-        // Eklenen kullanıcıyı çek
-        const [newUser] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-
-        res.status(201).json({
-            id: newUser[0].id,
-            name: newUser[0].name,
-            email: newUser[0].email,
-            role: newUser[0].role,
-            token: generateToken(newUser[0].id, newUser[0].role)
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Sunucu hatası: ' + error });
+    if (rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    const user = rows[0];
+
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if account is active
+    if (user.status !== 'active') {
+      return res.status(401).json({ message: 'Account is not active' });
+    }
+
+    // Update last login
+    await pool.execute(
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+      [user.id]
+    );
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, userType: user.user_type },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.json({
+      token,
+      user: userWithoutPassword
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
-// Giriş fonksiyonu
-exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
+// Register
+const register = async (req, res) => {
+  try {
+    const { name, email, password, userType } = req.body;
 
-    try {
-        // Kullanıcıyı bul
-        const [user] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        if (user.length === 0) return res.status(401).json({ message: 'Geçersiz e-posta.' });
+    // Check if user already exists
+    const [existingUsers] = await pool.execute(
+      'SELECT id FROM users WHERE email = ?',
+      [email]
+    );
 
-        // Şifreyi kontrol et
-        const isMatch = await bcrypt.compare(password, user[0].password);
-        if (!isMatch) return res.status(401).json({ message: 'Geçersiz şifre.' });
-
-        res.json({
-            id: user[0].id,
-            name: user[0].name,
-            email: user[0].email,
-            role: user[0].role,
-            token: generateToken(user[0].id, user[0].role)
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Sunucu hatası.' });
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ message: 'User already exists' });
     }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Insert new user
+    const [result] = await pool.execute(
+      'INSERT INTO users (name, email, password, user_type) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, userType]
+    );
+
+    // Get created user
+    const [newUser] = await pool.execute(
+      'SELECT id, name, email, user_type, specialization, created_at FROM users WHERE id = ?',
+      [result.insertId]
+    );
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: newUser[0]
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
-// Şifremi Unuttum
-exports.forgotPassword = async (req, res) => {
+// Forgot password
+const forgotPassword = async (req, res) => {
+  try {
     const { email } = req.body;
 
-    try {
-        // Kullanıcıyı bul
-        const [user] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        if (user.length === 0) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+    // Check if user exists
+    const [users] = await pool.execute(
+      'SELECT id, name FROM users WHERE email = ?',
+      [email]
+    );
 
-        // Token üret
-        const resetToken = crypto.randomBytes(20).toString('hex');
-
-        // Veritabanına yaz
-        await db.execute('UPDATE users SET resetToken = ? WHERE email = ?', [resetToken, email]);
-
-        // Normalde e-posta gönderilir, biz tokenı döneceğiz
-        res.status(200).json({ message: 'Şifre sıfırlama tokenı oluşturuldu.', resetToken });
-    } catch (error) {
-        res.status(500).json({ message: 'Sunucu hatası.' });
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+    // Save reset token
+    await pool.execute(
+      'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)',
+      [email, resetToken, expiresAt]
+    );
+
+    // Send email (in production, configure nodemailer)
+    console.log(`Password reset token for ${email}: ${resetToken}`);
+
+    res.json({ message: 'Password reset email sent' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
-// Şifre Sıfırlama
-exports.resetPassword = async (req, res) => {
-    const { resetToken, newPassword } = req.body;
+// Reset password
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
 
-    try {
-        // Token kontrol
-        const [user] = await db.execute('SELECT * FROM users WHERE resetToken = ?', [resetToken]);
-        if (user.length === 0) return res.status(400).json({ message: 'Geçersiz veya süresi dolmuş token.' });
+    // Find valid reset token
+    const [tokens] = await pool.execute(
+      'SELECT email FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()',
+      [token]
+    );
 
-        // Şifreyi hashle
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Şifreyi güncelle ve tokenı temizle
-        await db.execute('UPDATE users SET password = ?, resetToken = NULL WHERE resetToken = ?', [hashedPassword, resetToken]);
-
-        res.status(200).json({ message: 'Şifre başarıyla sıfırlandı.' });
-    } catch (error) {
-        res.status(500).json({ message: 'Sunucu hatası.' });
+    if (tokens.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
     }
+
+    const email = tokens[0].email;
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    await pool.execute(
+      'UPDATE users SET password = ? WHERE email = ?',
+      [hashedPassword, email]
+    );
+
+    // Delete used token
+    await pool.execute(
+      'DELETE FROM password_reset_tokens WHERE token = ?',
+      [token]
+    );
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
+
+module.exports = {
+  login,
+  register,
+  forgotPassword,
+  resetPassword
+}; 
