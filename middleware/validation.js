@@ -15,7 +15,6 @@ const handleValidationErrors = (req, res, next) => {
 const validateLogin = [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('userType').isIn(['user', 'doctor']).withMessage('User type must be user or doctor'),
   handleValidationErrors
 ];
 
