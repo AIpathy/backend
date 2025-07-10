@@ -1,19 +1,17 @@
+const bcrypt = require('bcryptjs');
 const { pool } = require('../config/database');
 
-// Get user profile
+// GET /api/users/profile
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const [rows] = await pool.execute(
       'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
-
     if (rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     res.json(rows[0]);
   } catch (error) {
     console.error('Get user profile error:', error);
@@ -21,58 +19,71 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile
+//  PUT /api/users/profile
 const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email } = req.body;
+    const { name, email, password, currentPassword } = req.body;
 
-    // Check if email is already taken by another user
+    // 1) E-posta çakışıyor mu kontrol et
     if (email) {
-      const [existingUsers] = await pool.execute(
+      const [existing] = await pool.execute(
         'SELECT id FROM users WHERE email = ? AND id != ?',
         [email, userId]
       );
-
-      if (existingUsers.length > 0) {
+      if (existing.length > 0) {
         return res.status(400).json({ message: 'Email already taken' });
       }
     }
 
-    // Update user
-    const updateFields = [];
-    const updateValues = [];
+    // 2) Şifre değiştirilecekse önce doğrula
+    if (password) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password required' });
+      }
+
+      const [rows] = await pool.execute(
+        'SELECT password FROM users WHERE id = ?',
+        [userId]
+      );
+      const user = rows[0];
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+
+      const hashed = await bcrypt.hash(password, 10);
+      await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashed, userId]);
+    }
+
+    // İsim ve e-posta güncelle
+    const fields = [];
+    const values = [];
 
     if (name) {
-      updateFields.push('name = ?');
-      updateValues.push(name);
+      fields.push('name = ?');
+      values.push(name);
     }
 
     if (email) {
-      updateFields.push('email = ?');
-      updateValues.push(email);
+      fields.push('email = ?');
+      values.push(email);
     }
 
-    if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields to update' });
+    if (fields.length > 0) {
+      values.push(userId);
+      await pool.execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
     }
 
-    updateValues.push(userId);
-
-    await pool.execute(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues
-    );
-
-    // Get updated user
-    const [updatedUser] = await pool.execute(
+    // Güncel kullanıcıyı geri döndür
+    const [updated] = await pool.execute(
       'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
 
     res.json({
       message: 'Profile updated successfully',
-      user: updatedUser[0]
+      user: updated[0]
     });
   } catch (error) {
     console.error('Update user profile error:', error);
@@ -80,30 +91,22 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// Get dashboard stats for users
+// Kullanıcı istatistikleri 
 const getUserStats = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Get total analyses count
     const [analysesCount] = await pool.execute(
       'SELECT COUNT(*) as total FROM analyses WHERE user_id = ?',
       [userId]
     );
-
-    // Get analyses by type
     const [analysesByType] = await pool.execute(
       'SELECT type, COUNT(*) as count FROM analyses WHERE user_id = ? GROUP BY type',
       [userId]
     );
-
-    // Get recent analyses
     const [recentAnalyses] = await pool.execute(
       'SELECT type, score, created_at FROM analyses WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
       [userId]
     );
-
-    // Calculate average score
     const [avgScore] = await pool.execute(
       'SELECT AVG(score) as average FROM analyses WHERE user_id = ? AND score IS NOT NULL',
       [userId]
@@ -125,4 +128,4 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   getUserStats
-}; 
+};
