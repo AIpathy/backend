@@ -22,71 +22,39 @@ const getUserProfile = async (req, res) => {
 //  PUT /api/users/profile
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { name, email, password, currentPassword } = req.body;
+    const userId = req.user.id;                 
+    const { name, email } = req.body;
 
-    // 1) E-posta çakışıyor mu kontrol et
-    if (email) {
-      const [existing] = await pool.execute(
-        'SELECT id FROM users WHERE email = ? AND id != ?',
-        [email, userId]
-      );
-      if (existing.length > 0) {
-        return res.status(400).json({ message: 'Email already taken' });
-      }
+    // Basit doğrulama
+    if (!name && !email) {
+      return res.status(400).json({ message: 'En az bir alan (name veya email) gönderin' });
     }
 
-    // 2) Şifre değiştirilecekse önce doğrula
-    if (password) {
-      if (!currentPassword) {
-        return res.status(400).json({ message: 'Current password required' });
-      }
-
-      const [rows] = await pool.execute(
-        'SELECT password FROM users WHERE id = ?',
-        [userId]
-      );
-      const user = rows[0];
-      const match = await bcrypt.compare(currentPassword, user.password);
-      if (!match) {
-        return res.status(401).json({ message: 'Current password is incorrect' });
-      }
-
-      const hashed = await bcrypt.hash(password, 10);
-      await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashed, userId]);
-    }
-
-    // İsim ve e-posta güncelle
+    // Değiştirmek istediğimiz alanları dinamik kur
     const fields = [];
     const values = [];
 
-    if (name) {
-      fields.push('name = ?');
-      values.push(name);
-    }
+    if (name)  { fields.push('name = ?');  values.push(name);  }
+    if (email) { fields.push('email = ?'); values.push(email); }
 
-    if (email) {
-      fields.push('email = ?');
-      values.push(email);
-    }
+    values.push(userId);   // WHERE koşulu için
 
-    if (fields.length > 0) {
-      values.push(userId);
-      await pool.execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
-    }
+    // SQL güncelle
+    await pool.execute(
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      values
+    );
 
-    // Güncel kullanıcıyı geri döndür
-    const [updated] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
+    // Güncel veriyi geri döndür
+    const [rows] = await pool.execute(
+      'SELECT id, name, email, user_type, specialization, created_at FROM users WHERE id = ?',
       [userId]
     );
 
-    res.json({
-      message: 'Profile updated successfully',
-      user: updated[0]
-    });
+    res.json({ message: 'Profil güncellendi', user: rows[0] });
+
   } catch (error) {
-    console.error('Update user profile error:', error);
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -124,8 +92,53 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// update password
+const updatePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Mevcut ve yeni şifre gerekli.' });
+    }
+
+    
+    const [rows] = await pool.execute(
+      'SELECT password FROM users WHERE id = ?',
+      [userId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+    }
+
+    const passwordHash = rows[0].password;
+
+    
+    const isMatch = await bcrypt.compare(currentPassword, passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Mevcut şifre hatalı.' });
+    }
+
+    
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    
+    await pool.execute(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [newHash, userId]
+    );
+
+    return res.json({ message: 'Şifre güncellendi.' });
+  } catch (error) {
+    console.error('Update password error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
-  getUserStats
+  getUserStats,
+  updatePassword
 };

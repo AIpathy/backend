@@ -15,7 +15,7 @@ const authenticateToken = async (req, res, next) => {
     // Get user from database
     const [rows] = await pool.execute(
       'SELECT id, name, email, user_type, specialization, status FROM users WHERE id = ?',
-      [decoded.userId]
+      [decoded.id]
     );
 
     if (rows.length === 0) {
