@@ -7,7 +7,7 @@ const crypto = require('crypto');
 // Login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, userType } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: 'E-posta ve şifre zorunludur' });
@@ -28,6 +28,13 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' });
     }
 
+    // User type kontrolü - güvenlik için kritik
+    if (userType && user.user_type !== userType) {
+      return res.status(403).json({ 
+        message: 'Bu hesap türü ile giriş yapamazsınız. Lütfen doğru hesap türünü seçin.' 
+      });
+    }
+
     const token = jwt.sign(
       { id: user.id, userType: user.user_type },
       process.env.JWT_SECRET,
@@ -36,7 +43,14 @@ const login = async (req, res) => {
 
     res.json({
       message: 'Giriş başarılı',
-      token
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        userType: user.user_type,
+        specialization: user.specialization
+      }
     });
 
   } catch (error) {
