@@ -43,7 +43,7 @@ const validateAnalysis = [
   handleValidationErrors
 ];
 
-// 🔐 Şifre güncelleme şeması
+// update password schema
 const passwordUpdateSchema = Joi.object({
   currentPassword: Joi.string().required().messages({
     'any.required': 'currentPassword alanı zorunludur',
