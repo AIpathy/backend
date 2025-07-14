@@ -82,3 +82,10 @@ INSERT INTO analyses (user_id, patient_id, type, score, details) VALUES
 (3, NULL, 'gad7', 8.1, 'Orta düzey anksiyete'),
 (1, 1, 'phq9', 5.5, 'Hasta durumu iyileşme gösteriyor'),
 (1, 2, 'facial', 4.8, 'Yüz analizi: Pozitif duygu durumu'); 
+
+-- Insert sample alerts
+INSERT INTO alerts (patient_id, type, message)
+VALUES
+(1, 'risk', 'PHQ-9 sonucuna göre yüksek risk gözlemlendi.'),
+(1, 'inactivity', 'Hasta 7 gündür aktif değil.'),
+(2, 'score_change', 'GAD-7 skoru anlamlı şekilde değişti.');

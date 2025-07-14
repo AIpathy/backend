@@ -7,56 +7,44 @@ const crypto = require('crypto');
 // Login
 const login = async (req, res) => {
   try {
-    const { email, password, userType } = req.body;
+    const { email, password } = req.body;
 
-    // Get user from database
+    if (!email || !password) {
+      return res.status(400).json({ message: 'E-posta ve şifre zorunludur' });
+    }
+
     const [rows] = await pool.execute(
-      'SELECT * FROM users WHERE email = ? AND user_type = ?',
-      [email, userType]
+      'SELECT * FROM users WHERE email = ?',
+      [email]
     );
 
     if (rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' });
     }
 
     const user = rows[0];
-
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' });
     }
 
-    // Check if account is active
-    if (user.status !== 'active') {
-      return res.status(401).json({ message: 'Account is not active' });
-    }
-
-    // Update last login
-    await pool.execute(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-      [user.id]
-    );
-
-    // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, userType: user.user_type },
+      { id: user.id, userType: user.user_type },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: '1h' }
     );
-
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      token,
-      user: userWithoutPassword
+      message: 'Giriş başarılı',
+      token
     });
+
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // Register
 const register = async (req, res) => {

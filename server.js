@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const alertRoutes = require('./routes/alerts');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +22,8 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/patients', require('./routes/patients'));
 app.use('/api/analyses', require('./routes/analyses'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/alerts', alertRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {

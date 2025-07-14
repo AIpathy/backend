@@ -1,19 +1,17 @@
+const bcrypt = require('bcryptjs');
 const { pool } = require('../config/database');
 
-// Get user profile
+// GET /api/users/profile
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-
     const [rows] = await pool.execute(
       'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
-
     if (rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     res.json(rows[0]);
   } catch (error) {
     console.error('Get user profile error:', error);
@@ -21,89 +19,62 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile
+//  PUT /api/users/profile
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id;                 
     const { name, email } = req.body;
 
-    // Check if email is already taken by another user
-    if (email) {
-      const [existingUsers] = await pool.execute(
-        'SELECT id FROM users WHERE email = ? AND id != ?',
-        [email, userId]
-      );
-
-      if (existingUsers.length > 0) {
-        return res.status(400).json({ message: 'Email already taken' });
-      }
+    // Basit doğrulama
+    if (!name && !email) {
+      return res.status(400).json({ message: 'En az bir alan (name veya email) gönderin' });
     }
 
-    // Update user
-    const updateFields = [];
-    const updateValues = [];
+    // Değiştirmek istediğimiz alanları dinamik kur
+    const fields = [];
+    const values = [];
 
-    if (name) {
-      updateFields.push('name = ?');
-      updateValues.push(name);
-    }
+    if (name)  { fields.push('name = ?');  values.push(name);  }
+    if (email) { fields.push('email = ?'); values.push(email); }
 
-    if (email) {
-      updateFields.push('email = ?');
-      updateValues.push(email);
-    }
+    values.push(userId);   // WHERE koşulu için
 
-    if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields to update' });
-    }
-
-    updateValues.push(userId);
-
+    // SQL güncelle
     await pool.execute(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      values
     );
 
-    // Get updated user
-    const [updatedUser] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
+    // Güncel veriyi geri döndür
+    const [rows] = await pool.execute(
+      'SELECT id, name, email, user_type, specialization, created_at FROM users WHERE id = ?',
       [userId]
     );
 
-    res.json({
-      message: 'Profile updated successfully',
-      user: updatedUser[0]
-    });
+    res.json({ message: 'Profil güncellendi', user: rows[0] });
+
   } catch (error) {
-    console.error('Update user profile error:', error);
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Get dashboard stats for users
+// Kullanıcı istatistikleri 
 const getUserStats = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Get total analyses count
     const [analysesCount] = await pool.execute(
       'SELECT COUNT(*) as total FROM analyses WHERE user_id = ?',
       [userId]
     );
-
-    // Get analyses by type
     const [analysesByType] = await pool.execute(
       'SELECT type, COUNT(*) as count FROM analyses WHERE user_id = ? GROUP BY type',
       [userId]
     );
-
-    // Get recent analyses
     const [recentAnalyses] = await pool.execute(
       'SELECT type, score, created_at FROM analyses WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
       [userId]
     );
-
-    // Calculate average score
     const [avgScore] = await pool.execute(
       'SELECT AVG(score) as average FROM analyses WHERE user_id = ? AND score IS NOT NULL',
       [userId]
@@ -121,8 +92,53 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// update password
+const updatePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Mevcut ve yeni şifre gerekli.' });
+    }
+
+    
+    const [rows] = await pool.execute(
+      'SELECT password FROM users WHERE id = ?',
+      [userId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+    }
+
+    const passwordHash = rows[0].password;
+
+    
+    const isMatch = await bcrypt.compare(currentPassword, passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Mevcut şifre hatalı.' });
+    }
+
+    
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    
+    await pool.execute(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [newHash, userId]
+    );
+
+    return res.json({ message: 'Şifre güncellendi.' });
+  } catch (error) {
+    console.error('Update password error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
-  getUserStats
-}; 
+  getUserStats,
+  updatePassword
+};
