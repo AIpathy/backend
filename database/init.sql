@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     user_type ENUM('user', 'doctor') NOT NULL DEFAULT 'user',
     specialization VARCHAR(255) NULL,
+    avatar_url VARCHAR(255) NULL,
+    `rank` VARCHAR(40) NULL,
     status ENUM('active', 'inactive', 'pending') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -63,6 +65,16 @@ CREATE TABLE IF NOT EXISTS alerts (
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );
 
+
+CREATE TABLE IF NOT EXISTS uploads (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+
+
 -- Insert sample data
 INSERT INTO users (name, email, password, user_type, specialization) VALUES
 ('Dr. Ahmet Yılmaz', 'dr.ahmet@example.com', '$2b$10$rQZ8K9mN2pL1xV3yU7wE4tR6sA8bC1dE2fG3hI4jK5lM6nO7pQ8rS9tU0vW1xY2z', 'doctor', 'Psikiyatri'),
@@ -89,3 +101,4 @@ VALUES
 (1, 'risk', 'PHQ-9 sonucuna göre yüksek risk gözlemlendi.'),
 (1, 'inactivity', 'Hasta 7 gündür aktif değil.'),
 (2, 'score_change', 'GAD-7 skoru anlamlı şekilde değişti.');
+
