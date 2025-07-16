@@ -34,6 +34,13 @@ const login = async (req, res, next) => {
       throw new ApiError(403, 'Bu kullanıcı bu panel için yetkili değil');
     }
 
+    // User type kontrolü - güvenlik için kritik
+    if (userType && user.user_type !== userType) {
+      return res.status(403).json({ 
+        message: 'Bu hesap türü ile giriş yapamazsınız. Lütfen doğru hesap türünü seçin.' 
+      });
+    }
+
     const token = jwt.sign(
       { id: user.id, userType: user.user_type, rank: user.rank },
       process.env.JWT_SECRET,
