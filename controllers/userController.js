@@ -6,7 +6,7 @@ const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const [rows] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
+      'SELECT id, name, email, avatar_url, user_type, specialization, `rank` FROM users WHERE id = ?',
       [userId]
     );
     if (rows.length === 0) {
@@ -59,6 +59,26 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Dosya zorunlu' });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await pool.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [
+      avatarUrl,
+      req.user.id
+    ]);
+
+    res.json({ avatar_url: avatarUrl });
+  } catch (err) {
+    console.error('Upload avatar error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // Kullanıcı istatistikleri 
 const getUserStats = async (req, res) => {
   try {
@@ -91,6 +111,7 @@ const getUserStats = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // update password
 const updatePassword = async (req, res) => {
@@ -140,5 +161,6 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   getUserStats,
+  uploadAvatar,
   updatePassword
 };

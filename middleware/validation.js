@@ -1,13 +1,13 @@
 const { body, validationResult } = require('express-validator');
 const Joi = require('joi');
+const ApiError = require('../utils/ApiError');
+
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      message: 'Validation failed',
-      errors: errors.array() 
-    });
+    const messages = errors.array().map(err => err.msg);
+    throw new ApiError(400, 'Doğrulama hatası', messages);
   }
   next();
 };
@@ -43,7 +43,7 @@ const validateAnalysis = [
   handleValidationErrors
 ];
 
-// 🔐 Şifre güncelleme şeması
+//  Şifre güncelleme şeması
 const passwordUpdateSchema = Joi.object({
   currentPassword: Joi.string().required().messages({
     'any.required': 'currentPassword alanı zorunludur',
