@@ -64,7 +64,10 @@ const login = async (req, res) => {
 // Register
 const register = async (req, res) => {
   try {
-    const { name, email, password, userType, specialization, expertiseLevel } = req.body;
+    let { name, email, password, userType, specialization, expertiseLevel } = req.body;
+    // MySQL undefined kabul etmez, null gönderilmeli
+    if (typeof specialization === 'undefined') specialization = null;
+    if (typeof expertiseLevel === 'undefined') expertiseLevel = null;
 
     // Check if user already exists
     const [existingUsers] = await pool.execute(
