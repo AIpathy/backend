@@ -49,7 +49,8 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         userType: user.user_type,
-        specialization: user.specialization
+        specialization: user.specialization,
+        expertiseLevel: user.expertise_level
       }
     });
 
@@ -63,7 +64,7 @@ const login = async (req, res) => {
 // Register
 const register = async (req, res) => {
   try {
-    const { name, email, password, userType } = req.body;
+    const { name, email, password, userType, specialization, expertiseLevel } = req.body;
 
     // Check if user already exists
     const [existingUsers] = await pool.execute(
@@ -78,15 +79,15 @@ const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Insert new user
+    // Insert new user with specialization and expertise level
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, password, user_type) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, userType]
+      'INSERT INTO users (name, email, password, user_type, specialization, expertise_level) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, userType, specialization, expertiseLevel]
     );
 
     // Get created user
     const [newUser] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, user_type, specialization, expertise_level, created_at FROM users WHERE id = ?',
       [result.insertId]
     );
 
