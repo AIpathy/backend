@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const alertRoutes = require('./routes/alerts');
 require('dotenv').config();
+const { testConnection } = require('./config/database');
 const runMigrations = require('./config/runMigrations');
 
 const app = express();
