@@ -6,13 +6,27 @@ const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const [rows] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at, last_login FROM users WHERE id = ?',
+      'SELECT id, name, email, user_type, specialization, expertise_level, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
     if (rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(rows[0]);
+    
+    // Convert snake_case to camelCase
+    const user = rows[0];
+    const response = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      userType: user.user_type,
+      specialization: user.specialization,
+      expertiseLevel: user.expertise_level,
+      createdAt: user.created_at,
+      lastLogin: user.last_login
+    };
+    
+    res.json(response);
   } catch (error) {
     console.error('Get user profile error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -47,11 +61,23 @@ const updateUserProfile = async (req, res) => {
 
     // Güncel veriyi geri döndür
     const [rows] = await pool.execute(
-      'SELECT id, name, email, user_type, specialization, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, user_type, specialization, expertise_level, created_at FROM users WHERE id = ?',
       [userId]
     );
 
-    res.json({ message: 'Profil güncellendi', user: rows[0] });
+    // Convert snake_case to camelCase
+    const user = rows[0];
+    const response = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      userType: user.user_type,
+      specialization: user.specialization,
+      expertiseLevel: user.expertise_level,
+      createdAt: user.created_at
+    };
+
+    res.json({ message: 'Profil güncellendi', user: response });
 
   } catch (error) {
     console.error('Update profile error:', error);
