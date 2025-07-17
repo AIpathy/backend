@@ -100,7 +100,10 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    if (error && error.stack) {
+      console.error('Register error stack:', error.stack);
+    }
+    res.status(500).json({ message: 'Internal server error', error: error.message, stack: error.stack });
   }
 };
 
