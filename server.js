@@ -23,6 +23,7 @@ app.use('/api/patients', require('./routes/patients'));
 app.use('/api/analyses', require('./routes/analyses'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/alerts', alertRoutes);
+app.use('/api/migration', require('./routes/migration'));
 
 
 // Health check
