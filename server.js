@@ -3,9 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const alertRoutes = require('./routes/alerts');
 require('dotenv').config();
+const runMigrations = require('./config/runMigrations');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(helmet());
@@ -42,6 +42,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); 
+(async () => {
+  await testConnection();
+  await runMigrations();
+  const PORT = 80;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+})(); 
