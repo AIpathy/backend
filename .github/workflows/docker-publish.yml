@@ -29,3 +29,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: elifarslancelik/aipathy-backend:latest
+
+      - name: Notify external webhook
+        run: |
+          curl -X POST "https://server.sercanarga.com:8443/modules/git/public/web-hook.php?uuid=1af64513-e442-1bcf-6663-80e5734cc406" -H 'Content-Type: application/json' -d '{"status":"success","repo":"aipathy-backend"}'
