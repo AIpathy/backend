@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     user_type ENUM('user', 'doctor') NOT NULL DEFAULT 'user',
     specialization VARCHAR(255) NULL,
+    expertise_level VARCHAR(255) NULL,
     status ENUM('active', 'inactive', 'pending') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -62,30 +63,3 @@ CREATE TABLE IF NOT EXISTS alerts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );
-
--- Insert sample data
-INSERT INTO users (name, email, password, user_type, specialization) VALUES
-('Dr. Ahmet Yılmaz', 'dr.ahmet@example.com', '$2b$10$rQZ8K9mN2pL1xV3yU7wE4tR6sA8bC1dE2fG3hI4jK5lM6nO7pQ8rS9tU0vW1xY2z', 'doctor', 'Psikiyatri'),
-('Ayşe Demir', 'ayse@example.com', '$2b$10$rQZ8K9mN2pL1xV3yU7wE4tR6sA8bC1dE2fG3hI4jK5lM6nO7pQ8rS9tU0vW1xY2z', 'user', NULL),
-('Mehmet Kaya', 'mehmet@example.com', '$2b$10$rQZ8K9mN2pL1xV3yU7wE4tR6sA8bC1dE2fG3hI4jK5lM6nO7pQ8rS9tU0vW1xY2z', 'user', NULL);
-
--- Insert sample patients
-INSERT INTO patients (doctor_id, name, email, age, status, risk_level) VALUES
-(1, 'Fatma Özkan', 'fatma@example.com', 28, 'active', 'medium'),
-(1, 'Ali Yıldız', 'ali@example.com', 35, 'active', 'low'),
-(1, 'Zeynep Kaya', 'zeynep@example.com', 42, 'warning', 'high');
-
--- Insert sample analyses
-INSERT INTO analyses (user_id, patient_id, type, score, details) VALUES
-(2, NULL, 'phq9', 7.5, 'Hafif depresyon belirtileri'),
-(2, NULL, 'voice', 6.2, 'Ses analizi: Normal stres seviyesi'),
-(3, NULL, 'gad7', 8.1, 'Orta düzey anksiyete'),
-(1, 1, 'phq9', 5.5, 'Hasta durumu iyileşme gösteriyor'),
-(1, 2, 'facial', 4.8, 'Yüz analizi: Pozitif duygu durumu'); 
-
--- Insert sample alerts
-INSERT INTO alerts (patient_id, type, message)
-VALUES
-(1, 'risk', 'PHQ-9 sonucuna göre yüksek risk gözlemlendi.'),
-(1, 'inactivity', 'Hasta 7 gündür aktif değil.'),
-(2, 'score_change', 'GAD-7 skoru anlamlı şekilde değişti.');
