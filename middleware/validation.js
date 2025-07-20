@@ -38,7 +38,7 @@ const validatePatient = [
 
 // Analysis validation
 const validateAnalysis = [
-  body('type').isIn(['voice', 'facial', 'phq9', 'gad7', 'test']).withMessage('Invalid analysis type'),
+  body('type').isIn(['voice', 'facial', 'phq9', 'beck_anxiety', 'test']).withMessage('Invalid analysis type'),
   body('score').optional().isFloat({ min: 0, max: 10 }).withMessage('Score must be between 0 and 10'),
   handleValidationErrors
 ];

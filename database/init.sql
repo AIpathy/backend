@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS analyses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     patient_id INT NULL,
-    type ENUM('voice', 'facial', 'phq9', 'gad7', 'test') NOT NULL,
+    type ENUM('voice', 'facial', 'phq9', 'beck_anxiety', 'test') NOT NULL,
     score DECIMAL(5,2) NULL,
     details TEXT,
     file_path VARCHAR(500) NULL,

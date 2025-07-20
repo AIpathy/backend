@@ -131,7 +131,7 @@ const submitTestAnalysis = async (req, res) => {
     const { type, answers, score } = req.body;
 
     // Validate test type
-    const validTypes = ['phq9', 'gad7', 'test'];
+    const validTypes = ['phq9', 'beck_anxiety', 'test'];
     if (!validTypes.includes(type)) {
       return res.status(400).json({ message: 'Invalid test type' });
     }
@@ -143,7 +143,7 @@ const submitTestAnalysis = async (req, res) => {
       else if (score >= 15) details = 'Orta düzey depresyon belirtileri';
       else if (score >= 10) details = 'Hafif depresyon belirtileri';
       else details = 'Minimal depresyon belirtileri';
-    } else if (type === 'gad7') {
+    } else if (type === 'beck_anxiety') {
       if (score >= 15) details = 'Şiddetli anksiyete belirtileri';
       else if (score >= 10) details = 'Orta düzey anksiyete belirtileri';
       else if (score >= 5) details = 'Hafif anksiyete belirtileri';
