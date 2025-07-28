@@ -25,7 +25,7 @@ app.use('/api/analyses', require('./routes/analyses'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/alerts', alertRoutes);
 app.use('/api/migration', require('./routes/migration'));
-
+app.use('/api/ml', require('./routes/ml'));
 
 // Health check
 app.get('/health', (req, res) => {
