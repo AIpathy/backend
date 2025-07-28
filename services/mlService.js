@@ -1,4 +1,5 @@
 const mlConfig = require('../config/ml');
+const fs = require('fs');
 
 const { ML_API_BASE_URL, ML_API_TIMEOUT, RETRY_ATTEMPTS } = mlConfig;
 
@@ -81,11 +82,16 @@ class MLService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
       
-      const url = new URL(`${ML_API_BASE_URL}/stt_emotion/`);
-      url.searchParams.append('audio_file_path', audioFilePath);
+      // Dosyayı oku ve FormData oluştur
+      const fileBuffer = fs.readFileSync(audioFilePath);
+      const fileName = audioFilePath.split('/').pop();
       
-      const response = await fetch(url, {
+      const formData = new FormData();
+      formData.append('file', new Blob([fileBuffer]), fileName);
+      
+      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion_upload/`, {
         method: 'POST',
+        body: formData,
         signal: controller.signal
       });
       

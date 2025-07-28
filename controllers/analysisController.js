@@ -2,6 +2,7 @@ const { pool } = require('../config/database');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mlService = require('../services/mlService');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -42,8 +43,22 @@ const upload = multer({
   }
 });
 
+// Geçici dosya temizleme fonksiyonu
+const cleanupTempFile = (filePath) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`Cleaned up temp file: ${filePath}`);
+    }
+  } catch (error) {
+    console.error(`Failed to cleanup temp file ${filePath}:`, error.message);
+  }
+};
+
 // Submit voice analysis
 const submitVoiceAnalysis = async (req, res) => {
+  let tempFilePath = null;
+  
   try {
     upload.single('audio')(req, res, async (err) => {
       if (err) {
@@ -55,30 +70,74 @@ const submitVoiceAnalysis = async (req, res) => {
       }
 
       const userId = req.user.id;
-      const filePath = req.file.path;
+      tempFilePath = req.file.path;
       
-      // Simulate AI analysis (in real app, call AI service)
-      const score = Math.random() * 10;
-      const details = `Ses analizi sonucu: ${score > 7 ? 'Yüksek stres' : score > 4 ? 'Orta stres' : 'Düşük stres'} belirtileri`;
-
-      const [result] = await pool.execute(
-        'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
-        [userId, 'voice', score, details, filePath]
-      );
-
-      res.status(201).json({
-        message: 'Voice analysis submitted successfully',
-        analysis: {
-          id: result.insertId,
-          type: 'voice',
-          score,
-          details,
-          created_at: new Date()
+      try {
+        // ML API'ya ses dosyasını gönder ve ElevenLabs analizi al
+        console.log(`Processing audio file: ${tempFilePath}`);
+        const mlResult = await mlService.analyzeAudioEmotion(tempFilePath);
+        
+        if (!mlResult.success) {
+          throw new Error(`ML Analysis failed: ${mlResult.error}`);
         }
-      });
+
+        // Analiz sonucunu veritabanına kaydet
+        const [result] = await pool.execute(
+          'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
+          [userId, 'voice', null, mlResult.data.transcription, tempFilePath]
+        );
+
+        // Başarılı sonucu döndür
+        res.status(201).json({
+          message: 'Voice analysis completed successfully',
+          analysis: {
+            id: result.insertId,
+            type: 'voice',
+            transcription: mlResult.data.transcription,
+            analyzed_at: mlResult.data.timestamp,
+            created_at: new Date()
+          }
+        });
+
+      } catch (mlError) {
+        console.error('ML API Error:', mlError.message);
+        
+        // ML API hatası durumunda fallback analiz
+        const fallbackDetails = 'Ses analizi tamamlandı ancak detaylı analiz şu anda kullanılamıyor.';
+        
+        const [result] = await pool.execute(
+          'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
+          [userId, 'voice', null, fallbackDetails, tempFilePath]
+        );
+
+        res.status(201).json({
+          message: 'Voice analysis completed with fallback',
+          analysis: {
+            id: result.insertId,
+            type: 'voice',
+            transcription: fallbackDetails,
+            warning: 'AI analysis temporarily unavailable',
+            created_at: new Date()
+          }
+        });
+      } finally {
+        // Geçici dosyayı temizle
+        if (tempFilePath) {
+          // Kısa bir gecikme sonrası temizle (dosya kullanımı tamamlansın)
+          setTimeout(() => {
+            cleanupTempFile(tempFilePath);
+          }, 1000);
+        }
+      }
     });
   } catch (error) {
     console.error('Voice analysis error:', error);
+    
+    // Hata durumunda da geçici dosyayı temizle
+    if (tempFilePath) {
+      cleanupTempFile(tempFilePath);
+    }
+    
     res.status(500).json({ message: 'Internal server error' });
   }
 };
