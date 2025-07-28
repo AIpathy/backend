@@ -10,9 +10,6 @@ router.use(authenticateToken);
 // POST /analyses/voice
 router.post('/voice', analysisController.submitVoiceAnalysis);
 
-// POST /analyses/facial
-router.post('/facial', analysisController.submitFacialAnalysis);
-
 // POST /analyses/test
 router.post('/test', validateAnalysis, analysisController.submitTestAnalysis);
 

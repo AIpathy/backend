@@ -83,47 +83,6 @@ const submitVoiceAnalysis = async (req, res) => {
   }
 };
 
-// Submit facial analysis
-const submitFacialAnalysis = async (req, res) => {
-  try {
-    upload.single('image')(req, res, async (err) => {
-      if (err) {
-        return res.status(400).json({ message: err.message });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: 'Image file is required' });
-      }
-
-      const userId = req.user.id;
-      const filePath = req.file.path;
-      
-      // Simulate AI analysis (in real app, call AI service)
-      const score = Math.random() * 10;
-      const details = `Yüz analizi sonucu: ${score > 7 ? 'Pozitif' : score > 4 ? 'Nötr' : 'Negatif'} duygu durumu`;
-
-      const [result] = await pool.execute(
-        'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
-        [userId, 'facial', score, details, filePath]
-      );
-
-      res.status(201).json({
-        message: 'Facial analysis submitted successfully',
-        analysis: {
-          id: result.insertId,
-          type: 'facial',
-          score,
-          details,
-          created_at: new Date()
-        }
-      });
-    });
-  } catch (error) {
-    console.error('Facial analysis error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
 // Submit test analysis (PHQ-9, GAD-7, etc.)
 const submitTestAnalysis = async (req, res) => {
   try {
@@ -192,7 +151,6 @@ const getUserAnalyses = async (req, res) => {
 
 module.exports = {
   submitVoiceAnalysis,
-  submitFacialAnalysis,
   submitTestAnalysis,
   getUserAnalyses
 }; 
