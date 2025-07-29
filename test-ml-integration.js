@@ -1,5 +1,10 @@
 const mlService = require('./services/mlService');
 
+// Node.js için fetch import'u
+if (typeof fetch === 'undefined') {
+  global.fetch = require('node-fetch');
+}
+
 async function testMLIntegration() {
   console.log('Testing ML Integration...\n');
 
@@ -77,7 +82,7 @@ async function testMLIntegration() {
 // Run test if this file is executed directly
 if (require.main === module) {
   // Add environment variables for testing
-  process.env.ML_API_URL = 'http://162.55.2.145:32791';
+  process.env.ML_API_URL = 'http://162.55.2.145:32793';
   process.env.ML_API_TIMEOUT = '30000';
   
   testMLIntegration().catch(console.error);

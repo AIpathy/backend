@@ -9,11 +9,11 @@ const config = {
   },
   
   production: {
-    ML_API_BASE_URL: process.env.ML_API_URL || 'http://162.55.2.145:32791', // Yeni ML model sunucusu
+    ML_API_BASE_URL: process.env.ML_API_URL || 'http://162.55.2.145:32793', // Yeni ML model sunucusu
     ML_API_TIMEOUT: 45000, // Production'da biraz daha uzun timeout
     RETRY_ATTEMPTS: 5,
     HEALTH_CHECK_INTERVAL: 300000, // 5 minutes
-    EXTERNAL_URL: 'http://162.55.2.145:32791' // External access için
+    EXTERNAL_URL: 'http://162.55.2.145:32793' // External access için
   },
   
   test: {

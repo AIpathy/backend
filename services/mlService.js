@@ -82,16 +82,12 @@ class MLService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
       
-      // Dosyayı oku ve FormData oluştur
-      const fileBuffer = fs.readFileSync(audioFilePath);
+      // Dosya adını al
       const fileName = audioFilePath.split('/').pop();
       
-      const formData = new FormData();
-      formData.append('file', new Blob([fileBuffer]), fileName);
-      
-      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
+      // Query parameter ile endpoint'i çağır
+      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/?audio_file_path=${fileName}`, {
         method: 'POST',
-        body: formData,
         signal: controller.signal
       });
       
