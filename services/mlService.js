@@ -82,28 +82,34 @@ class MLService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
       
+      // Dosyayı okuyup FormData ile ML API'ye gönder
+      if (!fs.existsSync(audioFilePath)) {
+        throw new Error(`Audio file not found: ${audioFilePath}`);
+      }
+      
+      const audioBuffer = fs.readFileSync(audioFilePath);
       const fileName = audioFilePath.split('/').pop();
-      // Dosya yolu (httpdocs/uploads)
-      const mlModelPath = `/httpdocs/uploads/${fileName}`;
       
-      console.log(`Original file path: ${audioFilePath}`);
-      console.log(`File name extracted: ${fileName}`);
-      console.log(`ML model path: ${mlModelPath}`);
-      console.log(`ML API Base URL: ${ML_API_BASE_URL}`);
+      // FormData oluştur ve ses dosyasını ekle
+      const FormData = require('form-data');
+      const formData = new FormData();
+      formData.append('audio', audioBuffer, fileName);
       
-      const fullUrl = `${ML_API_BASE_URL}/stt_emotion/?audio_file_path=${mlModelPath}`;
-      console.log(`Full ML API URL: ${fullUrl}`);
+      console.log(`Sending audio file directly to ML API: ${fileName}`);
+      console.log(`File size: ${audioBuffer.length} bytes`);
+      console.log(`ML API URL: ${ML_API_BASE_URL}/stt_emotion/`);
       
-      // Query parameter ile endpoint'i çağır
-      const response = await fetch(fullUrl, {
+      // ML API'ye dosyayı direkt gönder
+      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
         method: 'POST',
+        body: formData,
+        headers: formData.getHeaders(),
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
       
       console.log(`ML API Response Status: ${response.status}`);
-      console.log(`ML API Response Headers:`, Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -117,7 +123,9 @@ class MLService {
       return {
         success: true,
         data: {
-          transcription: data.Transcription,
+          transcription: data.transcription || data.Transcription || 'Ses analizi tamamlandı',
+          emotion_analysis: data.emotion_analysis || data.emotion || null,
+          ai_comment: data.ai_comment || data.AI_Yorum || null,
           timestamp: new Date().toISOString()
         }
       };
