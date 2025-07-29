@@ -82,13 +82,10 @@ class MLService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
       
-      // Dosyayı ML modelinin erişebileceği yere kopyala
       const fileName = audioFilePath.split('/').pop();
-      const mlModelPath = `/tmp/${fileName}`; // ML modelinin erişebileceği geçici dizin
+      const mlModelPath = `/app/uploads/${fileName}`; // ML modelinin erişebileceği uploads dizini
       
-      // Dosyayı kopyala
-      fs.copyFileSync(audioFilePath, mlModelPath);
-      console.log(`File copied to ML model: ${mlModelPath}`);
+      console.log(`File available for ML model: ${mlModelPath}`);
       
       // Query parameter ile endpoint'i çağır
       const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/?audio_file_path=${mlModelPath}`, {
@@ -103,14 +100,6 @@ class MLService {
       }
       
       const data = await response.json();
-      
-      // Geçici dosyayı temizle
-      try {
-        fs.unlinkSync(mlModelPath);
-        console.log(`Cleaned up temp file: ${mlModelPath}`);
-      } catch (cleanupError) {
-        console.error(`Failed to cleanup temp file: ${cleanupError.message}`);
-      }
       
       return {
         success: true,
