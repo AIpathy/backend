@@ -1,5 +1,6 @@
 const mlConfig = require('../config/ml');
 const fs = require('fs');
+const logger = require('../utils/logger');
 
 const { ML_API_BASE_URL, ML_API_TIMEOUT, RETRY_ATTEMPTS } = mlConfig;
 
@@ -84,6 +85,7 @@ class MLService {
       
       // Dosyayı okuyup FormData ile ML API'ye gönder
       if (!fs.existsSync(audioFilePath)) {
+        logger.error('Audio file not found', { audioFilePath });
         throw new Error(`Audio file not found: ${audioFilePath}`);
       }
       
@@ -95,9 +97,13 @@ class MLService {
       const formData = new FormData();
       formData.append('audio', audioBuffer, fileName);
       
-      console.log(`Sending audio file directly to ML API: ${fileName}`);
-      console.log(`File size: ${audioBuffer.length} bytes`);
-      console.log(`ML API URL: ${ML_API_BASE_URL}/stt_emotion/`);
+      const requestData = {
+        fileSize: audioBuffer.length,
+        fileName: fileName,
+        url: `${ML_API_BASE_URL}/stt_emotion/`
+      };
+      
+      logger.mlRequest('/stt_emotion/', requestData);
       
       // ML API'ye dosyayı direkt gönder
       const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
@@ -109,16 +115,28 @@ class MLService {
       
       clearTimeout(timeoutId);
       
-      console.log(`ML API Response Status: ${response.status}`);
+      logger.info('ML API Response received', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.log(`ML API Error Response: ${errorText}`);
+        logger.mlError('/stt_emotion/', {
+          message: `ML API audio analysis failed: ${response.status} - ${errorText}`,
+          status: response.status,
+          responseText: errorText
+        });
         throw new Error(`ML API audio analysis failed: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
-      console.log(`ML API Success Response:`, data);
+      logger.mlResponse('/stt_emotion/', {
+        status: response.status,
+        success: true,
+        data: data
+      });
       
       return {
         success: true,
@@ -130,8 +148,7 @@ class MLService {
         }
       };
     } catch (error) {
-      console.error('Audio emotion analysis failed:', error.message);
-      console.error('Error stack:', error.stack);
+      logger.mlError('/stt_emotion/', error);
       return { success: false, error: error.message };
     }
   }
