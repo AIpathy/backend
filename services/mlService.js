@@ -105,11 +105,18 @@ class MLService {
       
       logger.mlRequest('/stt_emotion/', requestData);
       
+      // Headers'ı logla
+      const headers = formData.getHeaders();
+      logger.debug('FormData Headers', {
+        headers: headers,
+        contentType: headers['content-type']
+      });
+      
       // ML API'ye dosyayı direkt gönder
       const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
         method: 'POST',
         body: formData,
-        headers: formData.getHeaders(),
+        headers: headers,
         signal: controller.signal
       });
       
