@@ -100,7 +100,7 @@ class MLService {
       // Dosya tipini belirle
       const mimeType = this.getMimeType(fileName);
       
-      // form-data paketi için doğru format - Buffer'ı doğrudan gönder
+      // Buffer'ı doğrudan ekle, options kullanma
       formData.append('audio', audioBuffer, fileName);
       
       const requestData = {
@@ -122,34 +122,55 @@ class MLService {
       
       // ML API'ye dosyayı direkt gönder
       let response;
+      
       try {
-        // Önce fetch ile dene
-        response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
-          method: 'POST',
-          body: formData,
-          headers: headers,
-          signal: controller.signal
-        });
-      } catch (fetchError) {
-        logger.warn('Fetch failed, trying with axios', { error: fetchError.message });
-        
-        // Fetch başarısız olursa axios ile dene
-        const axiosResponse = await axios.post(`${ML_API_BASE_URL}/stt_emotion/`, formData, {
-          headers: headers,
+        // Raw buffer ile deneyelim (boundary sorunu için)
+        logger.info('Trying raw buffer approach first');
+        const rawResponse = await axios.post(`${ML_API_BASE_URL}/stt_emotion/`, audioBuffer, {
+          headers: {
+            'Content-Type': mimeType,
+            'Content-Length': audioBuffer.length.toString()
+          },
           timeout: ML_API_TIMEOUT,
           maxContentLength: Infinity,
           maxBodyLength: Infinity
         });
         
-        // Axios response'unu fetch formatına çevir
         response = {
-          ok: axiosResponse.status >= 200 && axiosResponse.status < 300,
-          status: axiosResponse.status,
-          statusText: axiosResponse.statusText,
-          headers: axiosResponse.headers,
-          json: () => Promise.resolve(axiosResponse.data),
-          text: () => Promise.resolve(JSON.stringify(axiosResponse.data))
+          ok: rawResponse.status >= 200 && rawResponse.status < 300,
+          status: rawResponse.status,
+          statusText: rawResponse.statusText,
+          headers: rawResponse.headers,
+          json: () => Promise.resolve(rawResponse.data),
+          text: () => Promise.resolve(JSON.stringify(rawResponse.data))
         };
+      } catch (rawError) {
+        logger.warn('Raw buffer failed, trying FormData', { error: rawError.message });
+        
+        try {
+          // Raw buffer başarısız olursa FormData ile dene
+          const axiosResponse = await axios.post(`${ML_API_BASE_URL}/stt_emotion/`, formData, {
+            headers: headers,
+            timeout: ML_API_TIMEOUT,
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+          });
+          
+          response = {
+            ok: axiosResponse.status >= 200 && axiosResponse.status < 300,
+            status: axiosResponse.status,
+            statusText: axiosResponse.statusText,
+            headers: axiosResponse.headers,
+            json: () => Promise.resolve(axiosResponse.data),
+            text: () => Promise.resolve(JSON.stringify(axiosResponse.data))
+          };
+        } catch (formDataError) {
+          logger.error('Both raw buffer and FormData failed', { 
+            rawError: rawError?.message,
+            formDataError: formDataError?.message 
+          });
+          throw new Error(`ML API failed: ${rawError.message}`);
+        }
       }
       
       clearTimeout(timeoutId);
