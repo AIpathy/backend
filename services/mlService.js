@@ -86,21 +86,33 @@ class MLService {
       // Dosya yolu (httpdocs/uploads)
       const mlModelPath = `/httpdocs/uploads/${fileName}`;
       
-      console.log(`File available for ML model: ${mlModelPath}`);
+      console.log(`Original file path: ${audioFilePath}`);
+      console.log(`File name extracted: ${fileName}`);
+      console.log(`ML model path: ${mlModelPath}`);
+      console.log(`ML API Base URL: ${ML_API_BASE_URL}`);
+      
+      const fullUrl = `${ML_API_BASE_URL}/stt_emotion/?audio_file_path=${mlModelPath}`;
+      console.log(`Full ML API URL: ${fullUrl}`);
       
       // Query parameter ile endpoint'i çağır
-      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/?audio_file_path=${mlModelPath}`, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
       
+      console.log(`ML API Response Status: ${response.status}`);
+      console.log(`ML API Response Headers:`, Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error(`ML API audio analysis failed: ${response.status}`);
+        const errorText = await response.text();
+        console.log(`ML API Error Response: ${errorText}`);
+        throw new Error(`ML API audio analysis failed: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log(`ML API Success Response:`, data);
       
       return {
         success: true,
@@ -111,6 +123,7 @@ class MLService {
       };
     } catch (error) {
       console.error('Audio emotion analysis failed:', error.message);
+      console.error('Error stack:', error.stack);
       return { success: false, error: error.message };
     }
   }
