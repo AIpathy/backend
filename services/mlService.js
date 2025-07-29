@@ -202,8 +202,8 @@ class MLService {
         success: true,
         data: {
           transcription: data.transcription || data.Transcription || 'Ses analizi tamamlandı',
-          emotion_analysis: data.emotion_analysis || data.emotion || null,
-          ai_comment: data.ai_comment || data.AI_Yorum || null,
+          emotion_analysis: data.emotion_analysis || data.emotion || data.transcription || null,
+          ai_comment: data.ai_comment || data.AI_Yorum || data.transcription || null,
           timestamp: new Date().toISOString()
         }
       };
