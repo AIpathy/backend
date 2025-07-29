@@ -65,7 +65,7 @@ class Logger {
     }
   }
 
-  // ML servis özel logları
+  // ML servis detaylı loglar
   mlRequest(endpoint, requestData) {
     this.info('ML API Request', {
       endpoint,

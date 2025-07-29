@@ -194,7 +194,7 @@ class MLService {
   }
 
   /**
-   * Generate text response using ML model
+   * Generate text response
    */
   async generateTextResponse(message) {
     try {
