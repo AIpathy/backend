@@ -153,6 +153,44 @@ class MLService {
   }
 
   /**
+   * Generate text response using ML model
+   */
+  async generateTextResponse(message) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
+      
+      const response = await fetch(`${ML_API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`ML API chat failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        success: true,
+        data: {
+          response: data.response,
+          timestamp: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('Text response generation failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Get test type mapping for routing
    */
   getTestTypeMapping() {
