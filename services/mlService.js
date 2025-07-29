@@ -89,7 +89,7 @@ class MLService {
       const formData = new FormData();
       formData.append('file', new Blob([fileBuffer]), fileName);
       
-      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion_upload/`, {
+      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
         method: 'POST',
         body: formData,
         signal: controller.signal

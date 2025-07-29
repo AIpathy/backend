@@ -77,7 +77,7 @@ async function testMLIntegration() {
 // Run test if this file is executed directly
 if (require.main === module) {
   // Add environment variables for testing
-  process.env.ML_API_URL = 'http://localhost:8000';
+  process.env.ML_API_URL = 'http://162.55.2.145:32791';
   process.env.ML_API_TIMEOUT = '30000';
   
   testMLIntegration().catch(console.error);
