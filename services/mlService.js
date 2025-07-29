@@ -83,7 +83,8 @@ class MLService {
       const timeoutId = setTimeout(() => controller.abort(), ML_API_TIMEOUT);
       
       const fileName = audioFilePath.split('/').pop();
-      const mlModelPath = `/app/uploads/${fileName}`; // ML modelinin erişebileceği uploads dizini
+      // Dosya yolu (httpdocs/uploads)
+      const mlModelPath = `/httpdocs/uploads/${fileName}`;
       
       console.log(`File available for ML model: ${mlModelPath}`);
       
