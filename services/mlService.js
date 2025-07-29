@@ -1,6 +1,7 @@
 const mlConfig = require('../config/ml');
 const fs = require('fs');
 const logger = require('../utils/logger');
+const axios = require('axios');
 
 const { ML_API_BASE_URL, ML_API_TIMEOUT, RETRY_ATTEMPTS } = mlConfig;
 
@@ -95,30 +96,61 @@ class MLService {
       // FormData oluştur ve ses dosyasını ekle
       const FormData = require('form-data');
       const formData = new FormData();
+      
+      // Dosya tipini belirle
+      const mimeType = this.getMimeType(fileName);
+      
+      // form-data paketi için doğru format - Buffer'ı doğrudan gönder
       formData.append('audio', audioBuffer, fileName);
       
       const requestData = {
         fileSize: audioBuffer.length,
         fileName: fileName,
+        mimeType: mimeType,
         url: `${ML_API_BASE_URL}/stt_emotion/`
       };
       
       logger.mlRequest('/stt_emotion/', requestData);
       
-      // Headers'ı logla
+      // form-data paketi için headers'ı al
       const headers = formData.getHeaders();
       logger.debug('FormData Headers', {
         headers: headers,
-        contentType: headers['content-type']
+        contentType: headers['content-type'],
+        boundary: headers['content-type']?.split('boundary=')[1]
       });
       
       // ML API'ye dosyayı direkt gönder
-      const response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
-        method: 'POST',
-        body: formData,
-        headers: headers,
-        signal: controller.signal
-      });
+      let response;
+      try {
+        // Önce fetch ile dene
+        response = await fetch(`${ML_API_BASE_URL}/stt_emotion/`, {
+          method: 'POST',
+          body: formData,
+          headers: headers,
+          signal: controller.signal
+        });
+      } catch (fetchError) {
+        logger.warn('Fetch failed, trying with axios', { error: fetchError.message });
+        
+        // Fetch başarısız olursa axios ile dene
+        const axiosResponse = await axios.post(`${ML_API_BASE_URL}/stt_emotion/`, formData, {
+          headers: headers,
+          timeout: ML_API_TIMEOUT,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        });
+        
+        // Axios response'unu fetch formatına çevir
+        response = {
+          ok: axiosResponse.status >= 200 && axiosResponse.status < 300,
+          status: axiosResponse.status,
+          statusText: axiosResponse.statusText,
+          headers: axiosResponse.headers,
+          json: () => Promise.resolve(axiosResponse.data),
+          text: () => Promise.resolve(JSON.stringify(axiosResponse.data))
+        };
+      }
       
       clearTimeout(timeoutId);
       
@@ -250,6 +282,19 @@ class MLService {
       'beck_depression': this.predictBeckDepression.bind(this),
       'alcohol': this.predictAlcohol.bind(this)
     };
+  }
+
+  getMimeType(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const mimeTypes = {
+      'wav': 'audio/wav',
+      'mp3': 'audio/mpeg',
+      'm4a': 'audio/mp4',
+      'webm': 'audio/webm',
+      'ogg': 'audio/ogg',
+      'flac': 'audio/flac'
+    };
+    return mimeTypes[ext] || 'audio/wav';
   }
 }
 
