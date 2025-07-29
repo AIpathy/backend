@@ -1,9 +1,6 @@
 const mlService = require('./services/mlService');
 
-// Node.js için fetch import'u
-if (typeof fetch === 'undefined') {
-  global.fetch = require('node-fetch');
-}
+// Node.js 18+ için fetch global olarak mevcut
 
 async function testMLIntegration() {
   console.log('Testing ML Integration...\n');
@@ -82,8 +79,9 @@ async function testMLIntegration() {
 // Run test if this file is executed directly
 if (require.main === module) {
   // Add environment variables for testing
-  process.env.ML_API_URL = 'http://162.55.2.145:32793';
+  process.env.ML_API_URL = 'https://ml.aipathy.xyz';
   process.env.ML_API_TIMEOUT = '30000';
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // SSL sertifikasını bypass et
   
   testMLIntegration().catch(console.error);
 }

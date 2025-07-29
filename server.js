@@ -3,6 +3,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const alertRoutes = require('./routes/alerts');
 require('dotenv').config();
+
+// Set NODE_ENV to production if not set
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'production';
+}
 const { testConnection } = require('./config/database');
 const runMigrations = require('./config/runMigrations');
 
