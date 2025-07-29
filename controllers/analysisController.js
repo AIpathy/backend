@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mlService = require('../services/mlService');
+const logger = require('../utils/logger');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -74,18 +75,24 @@ const submitVoiceAnalysis = async (req, res) => {
       
       try {
         // ML API'ya ses dosyasını gönder ve ElevenLabs analizi al
-        console.log(`Processing audio file: ${tempFilePath}`);
+        logger.info('Processing voice analysis', {
+          userId: userId,
+          tempFilePath: tempFilePath,
+          fileSize: req.file.size
+        });
+        
         const mlResult = await mlService.analyzeAudioEmotion(tempFilePath);
         
-        console.log('=== ML API RESULT ===');
-        console.log('Success:', mlResult.success);
-        console.log('Error:', mlResult.error);
-        console.log('Data:', JSON.stringify(mlResult.data, null, 2));
-        console.log('===================');
+        logger.info('ML API Result received', {
+          success: mlResult.success,
+          error: mlResult.error,
+          hasData: !!mlResult.data,
+          hasTranscription: !!(mlResult.data && mlResult.data.transcription)
+        });
         
         // ML API'den response geldi mi kontrol et (success false olsa bile)
         if (mlResult.data && mlResult.data.transcription) {
-          console.log(' ML API response received, saving result...');
+          logger.info('ML API response received, saving result to database');
           
           // Analiz sonucunu veritabanına kaydet
           const [result] = await pool.execute(
@@ -110,11 +117,18 @@ const submitVoiceAnalysis = async (req, res) => {
           
         } else {
           // data yoksa error fırlat
+          logger.error('ML Analysis failed - no data received', {
+            error: mlResult.error,
+            hasData: !!mlResult.data
+          });
           throw new Error(`ML Analysis failed: ${mlResult.error || 'No data received'}`);
         }
 
       } catch (mlError) {
-        console.error('ML API Error:', mlError.message);
+        logger.error('ML API Error in controller', {
+          message: mlError.message,
+          stack: mlError.stack
+        });
         
         // ML API hatası durumunda fallback analiz
         const fallbackDetails = 'Ses analizi tamamlandı ancak detaylı analiz şu anda kullanılamıyor.';
