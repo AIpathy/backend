@@ -198,6 +198,16 @@ class MLService {
         data: data
       });
       
+      // ML model'den gelen response'u detaylı logla
+      logger.info('ML Model Response Details', {
+        rawData: data,
+        hasTranscription: !!data.transcription,
+        hasTranscriptionCapital: !!data.Transcription,
+        hasEmotionAnalysis: !!data.emotion_analysis,
+        hasAiComment: !!data.ai_comment,
+        hasAiYorum: !!data.AI_Yorum
+      });
+      
       return {
         success: true,
         data: {
