@@ -77,27 +77,41 @@ const submitVoiceAnalysis = async (req, res) => {
         console.log(`Processing audio file: ${tempFilePath}`);
         const mlResult = await mlService.analyzeAudioEmotion(tempFilePath);
         
-        if (!mlResult.success) {
-          throw new Error(`ML Analysis failed: ${mlResult.error}`);
+        console.log('=== ML API RESULT ===');
+        console.log('Success:', mlResult.success);
+        console.log('Error:', mlResult.error);
+        console.log('Data:', JSON.stringify(mlResult.data, null, 2));
+        console.log('===================');
+        
+        // ML API'den response geldi mi kontrol et (success false olsa bile)
+        if (mlResult.data && mlResult.data.transcription) {
+          console.log(' ML API response received, saving result...');
+          
+          // Analiz sonucunu veritabanına kaydet
+          const [result] = await pool.execute(
+            'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
+            [userId, 'voice', null, mlResult.data.transcription, tempFilePath]
+          );
+
+          // Başarılı sonucu döndür
+          res.status(201).json({
+            message: 'Voice analysis completed successfully',
+            analysis: {
+              id: result.insertId,
+              type: 'voice',
+              transcription: mlResult.data.transcription,
+              emotion_analysis: mlResult.data.emotion_analysis,
+              ai_comment: mlResult.data.ai_comment,
+              analyzed_at: mlResult.data.timestamp,
+              created_at: new Date(),
+              warning: !mlResult.success ? 'Partial analysis completed' : undefined
+            }
+          });
+          
+        } else {
+          // data yoksa error fırlat
+          throw new Error(`ML Analysis failed: ${mlResult.error || 'No data received'}`);
         }
-
-        // Analiz sonucunu veritabanına kaydet
-        const [result] = await pool.execute(
-          'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
-          [userId, 'voice', null, mlResult.data.transcription, tempFilePath]
-        );
-
-        // Başarılı sonucu döndür
-        res.status(201).json({
-          message: 'Voice analysis completed successfully',
-          analysis: {
-            id: result.insertId,
-            type: 'voice',
-            transcription: mlResult.data.transcription,
-            analyzed_at: mlResult.data.timestamp,
-            created_at: new Date()
-          }
-        });
 
       } catch (mlError) {
         console.error('ML API Error:', mlError.message);
