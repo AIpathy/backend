@@ -7,7 +7,7 @@ const mlService = require('../services/mlService');
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = process.env.UPLOAD_PATH || './uploads';
+    const uploadPath = process.env.UPLOAD_PATH || '/app/uploads';
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
