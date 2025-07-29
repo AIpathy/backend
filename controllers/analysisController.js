@@ -91,13 +91,16 @@ const submitVoiceAnalysis = async (req, res) => {
         });
         
         // ML API'den response geldi mi kontrol et (success false olsa bile)
-        if (mlResult.data && mlResult.data.transcription) {
-          logger.info('ML API response received, saving result to database');
+        const transcription = mlResult.data?.transcription || mlResult.data?.Transcription;
+        if (mlResult.data && transcription) {
+          logger.info('ML API response received, saving result to database', {
+            transcription: transcription.substring(0, 100) + '...'
+          });
           
           // Analiz sonucunu veritabanına kaydet
           const [result] = await pool.execute(
             'INSERT INTO analyses (user_id, type, score, details, file_path) VALUES (?, ?, ?, ?, ?)',
-            [userId, 'voice', null, mlResult.data.transcription, tempFilePath]
+            [userId, 'voice', null, transcription, tempFilePath]
           );
 
           // Başarılı sonucu döndür
@@ -106,9 +109,9 @@ const submitVoiceAnalysis = async (req, res) => {
             analysis: {
               id: result.insertId,
               type: 'voice',
-              transcription: mlResult.data.transcription,
-              emotion_analysis: mlResult.data.emotion_analysis,
-              ai_comment: mlResult.data.ai_comment,
+              transcription: transcription,
+              emotion_analysis: mlResult.data.emotion_analysis || transcription,
+              ai_comment: mlResult.data.ai_comment || transcription,
               analyzed_at: mlResult.data.timestamp,
               created_at: new Date(),
               warning: !mlResult.success ? 'Partial analysis completed' : undefined
