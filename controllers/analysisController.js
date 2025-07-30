@@ -110,8 +110,8 @@ const submitVoiceAnalysis = async (req, res) => {
               id: result.insertId,
               type: 'voice',
               transcription: transcription,
-              emotion_analysis: mlResult.data.emotion_analysis || transcription,
-              ai_comment: mlResult.data.ai_comment || transcription,
+              emotion_analysis: mlResult.data.emotion_analysis || null,
+              ai_comment: mlResult.data.ai_comment || null,
               analyzed_at: mlResult.data.timestamp,
               created_at: new Date(),
               warning: !mlResult.success ? 'Partial analysis completed' : undefined
