@@ -208,12 +208,13 @@ class MLService {
         hasAiYorum: !!data.AI_Yorum
       });
       
+      // ElevenLabs transcription'ı ve Gemini analizi ayrı ayrı döndür
       return {
         success: true,
         data: {
-          transcription: data.transcription || data.Transcription || 'Ses analizi tamamlandı',
-          emotion_analysis: data.emotion_analysis || data.emotion || data.transcription || null,
-          ai_comment: data.ai_comment || data.AI_Yorum || data.transcription || null,
+          transcription: data.Transcription || data.transcription || 'Ses analizi tamamlandı',
+          emotion_analysis: data.emotion_analysis || null,
+          ai_comment: data.ai_comment || null,
           timestamp: new Date().toISOString()
         }
       };
