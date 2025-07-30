@@ -1,97 +1,105 @@
-# AIpathy
+# AIpathy Backend
 
-AIpathy, ruh sağlığı takibi ve analizi için geliştirilmiş web uygulamasıdır.
+## Kullanılan Teknolojiler
 
-## 🎯 Backend - Tamamlanan Özellikler
+### Diller
+- **JavaScript (Node.js)** - Ana programlama dili
 
-### ✅ Kullanıcı Yönetimi (User Management)
+### Framework ve Kütüphaneler
+- **Express.js** - Web framework
+- **bcryptjs** - Şifre hashleme
+- **jsonwebtoken** - JWT token yönetimi
+- **express-validator** - Form validasyonu
+- **multer** - Dosya upload işlemleri
+- **axios** - HTTP istekleri
+- **helmet** - Güvenlik middleware
+- **cors** - Cross-origin resource sharing
+- **dotenv** - Environment variables
 
-#### Kimlik Doğrulama (Authentication)
-- **Kullanıcı Kaydı**: Yeni kullanıcı hesabı oluşturma
-- **Kullanıcı Girişi**: Email ve şifre ile giriş yapma
-- **Şifre Sıfırlama**: Unutulan şifreleri sıfırlama
-- **JWT Token**: Güvenli token tabanlı kimlik doğrulama
+### Veritabanı
+- **MySQL** - Ana veritabanı
+- **mysql2** - MySQL driver
 
-#### Kullanıcı Profil Yönetimi
-- **Profil Görüntüleme**: Kullanıcı bilgilerini getirme
-- **Profil Güncelleme**: Kullanıcı bilgilerini düzenleme
-- **Kullanıcı İstatistikleri**: Analiz geçmişi ve istatistikler
+### Geliştirme ve Deployment
+- **Jest** - Test framework
+- **Nodemon** - Development server
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
 
-#### Kullanıcı Rolleri
-- **Normal Kullanıcı** (`user`): Analiz yapabilen kullanıcılar
-- **Doktor** (`doctor`): Hasta yönetimi yapabilen kullanıcılar
+### **Deployment/Containerization:**
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
 
-### ✅ Hasta Yönetimi (Patient Management)
+### **CI/CD:**
+- **Github Actions**
+- **Deploy to Server**
 
-#### Hasta İşlemleri
-- **Hasta Listesi**: Doktorun hastalarını listeleme
-- **Hasta Detayı**: Belirli hasta bilgilerini görüntüleme
-- **Hasta Ekleme**: Yeni hasta kaydı oluşturma
-- **Hasta Güncelleme**: Hasta bilgilerini düzenleme
-- **Hasta Analizleri**: Hastanın analiz geçmişini görüntüleme
+### **Domain/Hosting/Server**
+- **Domain: https://aipathy.xyz**
+- **Provider: Sercan Arga (Teşekkürler)**
 
-#### Hasta Durumu Takibi
-- **Risk Seviyesi**: Düşük, orta, yüksek risk kategorileri
-- **Durum Takibi**: Aktif, pasif, uyarı durumları
-- **Son Aktivite**: Hastanın son aktivite zamanı
+### **Control Panel:**
+- **Plesk** - Web hosting kontrol paneli
 
-### ✅ Analiz Sistemi (Analysis System)
+## Proje Mimarisi
 
-#### Analiz Türleri
+### MVC Mimarisi
+- **Controllers**: İş mantığı ve API endpoint'leri
+- **Routes**: URL routing ve middleware yönetimi
+- **Middleware**: Authentication, validation, error handling
+- **Services**: Business logic ve external API entegrasyonları
+- **Config**: Veritabanı ve uygulama konfigürasyonları
+
+### Kod Yapısı
+```
+backend/
+├── config/                 # Konfigürasyon dosyaları
+├── controllers/           # İş mantığı kontrolcüleri
+├── middleware/            # Middleware fonksiyonları
+├── routes/               # API route'ları
+├── services/             # Business logic servisleri
+├── database/             # Veritabanı dosyaları
+├── utils/                # Yardımcı fonksiyonlar
+├── server.js             # Ana sunucu dosyası
+├── Dockerfile           # Docker container konfigürasyonu
+└── docker-compose.yml   # Multi-container orchestration
+```
+
+### API Mimarisi
+- **RESTful API Design** - Standart HTTP metodları
+- **JWT Authentication** - Token tabanlı güvenlik
+- **Role-based Access Control** - Kullanıcı rolü bazlı erişim
+- **Error Handling** - Merkezi hata yönetimi
+- **Input Validation** - Giriş verisi doğrulama
+
+### Kullanıcı Yönetimi
+- **Kimlik Doğrulama**: Kayıt, giriş, şifre sıfırlama
+- **Profil Yönetimi**: Görüntüleme ve güncelleme
+- **Kullanıcı Rolleri**: Normal kullanıcı ve doktor rolleri
+
+### Hasta Yönetimi
+- **Hasta İşlemleri**: Liste, detay, ekleme, güncelleme
+- **Durum Takibi**: Risk seviyeleri ve aktivite takibi
+- **Analiz Geçmişi**: Hastanın tüm analizleri
+
+### Analiz Sistemi
 - **Ses Analizi**: Ses dosyası yükleyerek analiz
-- **Yüz Analizi**: Görsel dosya yükleyerek analiz
 - **Test Analizi**: PHQ-9, GAD-7 ve diğer testler
+- **Dosya Yükleme**: Audio dosyaları için güvenli upload
+- **Sonuç Raporlama**: Detaylı analiz sonuçları
 
-#### Dosya Yükleme
-- **Audio Dosyaları**: Ses analizi için
-- **Image Dosyaları**: Yüz analizi için
-- **Dosya Doğrulama**: MIME type kontrolü
-- **Boyut Limiti**: 10MB maksimum dosya boyutu
+### Dashboard Sistemi
+- **Doktor Dashboard**
+- **Kullanıcı Dashboard**
 
-#### Analiz Sonuçları
-- **Skor Hesaplama**: 0-10 arası puanlama
-- **Detaylı Rapor**: Analiz sonuçları ve açıklamalar
-- **Geçmiş Takibi**: Tüm analiz geçmişi
-
-### ✅ Dashboard Sistemi
-
-#### Doktor Dashboard
-- **Hasta İstatistikleri**: Toplam hasta sayısı
-- **Durum Dağılımı**: Hasta durumlarına göre dağılım
-- **Risk Analizi**: Hasta risk seviyeleri
-- **Son Aktiviteler**: Son 10 aktivite
-- **Okunmamış Uyarılar**: Uyarı sayısı
-
-#### Kullanıcı Dashboard
-- **Analiz İstatistikleri**: Toplam analiz sayısı
-- **Tür Dağılımı**: Analiz türlerine göre dağılım
-- **Son Analizler**: Son 5 analiz
-- **Ortalama Skor**: Tüm analizlerin ortalaması
-- **Trend Analizi**: Son 7 gün vs önceki 7 gün
-
-### ✅ Uyarı Sistemi (Alert System)
-
-#### Uyarı Türleri
+### Alert System
 - **Risk Uyarıları**: Yüksek riskli hasta uyarıları
 - **İnaktivite Uyarıları**: Uzun süre analiz yapmayan hastalar
-- **Skor Değişimi**: Anormal skor değişimleri
+- **Uyarı Yönetimi**: Liste, okundu işaretleme, filtreleme
 
-#### Uyarı Yönetimi
-- **Uyarı Listesi**: Tüm uyarıları görüntüleme
-- **Okundu İşaretleme**: Uyarıları okundu olarak işaretleme
-- **Filtreleme**: Okunmamış uyarıları filtreleme
+## API Endpoints
 
-### ✅ Güvenlik Özellikleri
-- **Şifre Hashleme**: bcryptjs ile güvenli şifre saklama
-- **Input Validation**: Express-validator ile veri doğrulama
-- **CORS**: Cross-origin resource sharing desteği
-- **Helmet**: Güvenlik başlıkları
-- **JWT Authentication**: Token tabanlı kimlik doğrulama
-- **Role-based Access**: Rol tabanlı erişim kontrolü
-
-## 🔗 API Endpoints
-
-### Authentication Endpoints
+### Authentication
 ```
 POST /api/auth/register     - Kullanıcı kaydı
 POST /api/auth/login        - Kullanıcı girişi
@@ -99,13 +107,14 @@ POST /api/auth/forgot-password - Şifre sıfırlama isteği
 POST /api/auth/reset-password  - Şifre sıfırlama
 ```
 
-### User Management Endpoints
+### User Management
 ```
 GET  /api/users/profile     - Kullanıcı profilini getir
 PUT  /api/users/profile     - Kullanıcı profilini güncelle
+PUT  /api/users/password    - Şifre güncelleme
 ```
 
-### Patient Management Endpoints
+### Patient Management
 ```
 GET  /api/patients          - Hasta listesini getir
 GET  /api/patients/:id      - Belirli hastayı getir
@@ -114,15 +123,14 @@ POST /api/patients          - Yeni hasta ekle
 PUT  /api/patients/:id      - Hasta bilgilerini güncelle
 ```
 
-### Analysis Endpoints
+### Analysis
 ```
 POST /api/analyses/voice    - Ses analizi gönder
-POST /api/analyses/facial   - Yüz analizi gönder
 POST /api/analyses/test     - Test analizi gönder
 GET  /api/analyses/user     - Kullanıcı analizlerini getir
 ```
 
-### Dashboard Endpoints
+### Dashboard
 ```
 GET  /api/dashboard/doctor/stats - Doktor istatistikleri
 GET  /api/dashboard/user/stats   - Kullanıcı istatistikleri
@@ -130,63 +138,42 @@ GET  /api/dashboard/alerts       - Uyarıları getir
 PUT  /api/dashboard/alerts/:id/read - Uyarıyı okundu işaretle
 ```
 
+### Alerts
+```
+GET  /api/alerts            - Tüm uyarıları getir
+GET  /api/alerts/:id        - Belirli uyarıyı getir
+PUT  /api/alerts/:id/read   - Uyarıyı okundu işaretle
+PUT  /api/alerts/read-all   - Tüm uyarıları okundu işaretle
+DELETE /api/alerts/:id      - Uyarı sil
+DELETE /api/alerts          - Tüm uyarıları sil
+```
+
+### ML Service
+```
+GET  /api/ml/health         - ML servis durumu kontrolü
+POST /api/ml/analyze/:testType - Test analizi (anxiety, borderline, narcissism, social_phobia, beck_depression, alcohol)
+POST /api/ml/analyze-audio  - Ses duygu analizi
+POST /api/ml/combined-analysis - Test + ses kombinasyon analizi
+```
+
+### AI Service
+```
+POST /api/ai/chat           - AI destekli sohbet
+```
+
+### Migration
+```
+GET  /api/migration         - Migration işlemleri
+```
+
 ### Health Check
 ```
 GET /health                 - API durumu kontrolü
 ```
 
-## 🛠️ Teknolojiler
+## Veritabanı Şeması
 
-### Backend Framework
-- **Node.js**: JavaScript runtime
-- **Express.js**: Web framework
-- **MySQL**: Veritabanı
-- **JWT**: Token tabanlı kimlik doğrulama
-
-### Güvenlik
-- **bcryptjs**: Şifre hashleme
-- **helmet**: Güvenlik başlıkları
-- **express-validator**: Input validation
-
-### Dosya İşleme
-- **multer**: Dosya yükleme
-- **fs**: Dosya sistemi işlemleri
-
-### Geliştirme Araçları
-- **nodemon**: Otomatik sunucu yenileme
-- **dotenv**: Ortam değişkenleri
-- **cors**: Cross-origin resource sharing
-
-## 📁 Proje Yapısı
-
-```
-backend/
-├── config/
-│   └── database.js          # Veritabanı bağlantısı
-├── controllers/
-│   ├── authController.js     # Kimlik doğrulama işlemleri
-│   ├── userController.js     # Kullanıcı yönetimi
-│   ├── patientController.js  # Hasta yönetimi
-│   ├── analysisController.js # Analiz işlemleri
-│   └── dashboardController.js # Dashboard işlemleri
-├── middleware/
-│   ├── auth.js              # JWT token doğrulama
-│   └── validation.js        # Input validation
-├── routes/
-│   ├── auth.js              # Authentication route'ları
-│   ├── users.js             # User management route'ları
-│   ├── patients.js          # Patient management route'ları
-│   ├── analyses.js          # Analysis route'ları
-│   └── dashboard.js         # Dashboard route'ları
-├── database/
-│   └── init.sql             # Veritabanı şeması
-├── server.js                # Ana sunucu dosyası
-└── package.json             # Proje bağımlılıkları
-```
-
-## 🗄️ Veritabanı Şeması
-
-### Aktif Tablolar
+### Tablolar
 - **users**: Kullanıcı bilgileri
 - **password_reset_tokens**: Şifre sıfırlama token'ları
 - **patients**: Hasta bilgileri
@@ -199,28 +186,19 @@ backend/
 - `patients` → `analyses` (patient_id foreign key)
 - `patients` → `alerts` (patient_id foreign key)
 
-## 🚀 Kurulum ve Çalıştırma (eklenecek)
+## Güvenlik Özellikleri
+- **bcryptjs** - Güvenli şifre hashleme
+- **JWT** - Token tabanlı kimlik doğrulama
+- **Helmet** - Güvenlik başlıkları
+- **CORS** - Cross-origin resource sharing
+- **Input Validation** - Veri doğrulama
+- **Role-based Access** - Rol tabanlı erişim kontrolü
 
-### Gereksinimler
-- Node.js (v14+)
-- MySQL (v8.0+)
-- npm veya yarn
-```
-
-## 🔮 Gelecek Özellikler
-
-### Planlanan Geliştirmeler
-- **AI Entegrasyonu**: Gerçek AI analiz servisleri
+## Gelecek Özellikler
 - **Email Entegrasyonu**: Şifre sıfırlama email'leri
 - **Real-time Notifications**: WebSocket ile gerçek zamanlı bildirimler
 - **Mobile API**: Mobil uygulama için optimize edilmiş endpoint'ler
 - **Advanced Analytics**: Gelişmiş analitik ve raporlama
 - **Multi-language Support**: Çoklu dil desteği
 
-## İletişim
-
-Proje hakkında sorularınız için issue açabilirsiniz.
-
 ---
-
-**Not**: Gelecekteki iyileştirmeler için takipte kalın!
