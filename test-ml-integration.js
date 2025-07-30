@@ -41,7 +41,7 @@ async function testMLIntegration() {
 
   // 3. Test Audio Analysis
   console.log('\n3. Testing Audio Analysis...');
-  const audioResult = await mlService.analyzeAudioEmotion('/app/AiPathyAuido.m4a');
+  const audioResult = await mlService.analyzeAudioEmotion('./test-audio.m4a');
   if (audioResult.success) {
     console.log('Audio analysis successful:');
     console.log('   Transcription:', audioResult.data.transcription.substring(0, 100) + '...');

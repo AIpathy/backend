@@ -178,7 +178,7 @@ class MLService {
       logger.info('ML API Response received', {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: response.headers
       });
       
       if (!response.ok) {
